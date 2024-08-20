@@ -1,0 +1,23 @@
+---
+services:
+  docker-registry:  # https://hub.docker.com/_/registry
+    container_name: docker-registry
+    hostname: docker-registry
+    environment:
+      REGISTRY_HTTP_SECRET: testtest
+    image: docker.io/library/registry:latest
+    ports:
+      - 17401:5000
+    networks:
+      - common
+    restart: unless-stopped
+    volumes:
+      - /volume1/docker/registry/docker-registry/etc/docker/registry:/etc/docker/registry:ro
+      - /volume1/docker/registry/docker-registry/var/lib/registry:/var/lib/registry
+
+networks:
+  common:
+    name: common
+
+version: "3.8"
+
