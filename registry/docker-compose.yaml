@@ -5,7 +5,7 @@ services:
     hostname: docker-registry
     environment:
       REGISTRY_HTTP_SECRET: testtest
-    image: docker.io/library/registry:latest
+    image: docker.io/library/registry
     ports:
       - 17401:5000
     networks:
@@ -20,4 +20,3 @@ networks:
     name: common
 
 version: "3.8"
-
