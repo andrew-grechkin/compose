@@ -1,0 +1,46 @@
+---
+services:
+  mqtt:  # https://hub.docker.com/_/eclipse-mosquitto
+    command: /usr/sbin/mosquitto -c /etc/mosquitto/mosquitto.conf
+    hostname: mqtt
+    image: docker.io/library/eclipse-mosquitto:latest
+    networks: [common]
+    ports: [1883:1883, 9001:9001]
+    restart: unless-stopped
+    volumes:
+      - /volume1/docker/mqtt/mqtt/config:/etc/mosquitto
+      - /volume1/docker/mqtt/mqtt/data:/var/lib/mosquitto
+      - /volume1/docker/mqtt/mqtt/log:/var/log/mosquitto
+
+  mqtt-explorer:  # https://hub.docker.com/_/eclipse-mosquitto
+    hostname: mqtt-explorer
+    image: docker.io/smeagolworms4/mqtt-explorer:latest
+    links: [mqtt]
+    networks: [common]
+    ports: [4000:4000]
+    restart: unless-stopped
+    volumes: [/volume1/docker/mqtt/explorer/config:/mqtt-explorer/config]
+
+  zigbee2mqtt:  # https://hub.docker.com/r/koenkk/zigbee2mqtt
+    environment: [TZ=Europe/Amsterdam]
+    devices: [/dev/ttyUSB0]
+    hostname: zigbee2mqtt
+    image: docker.io/koenkk/zigbee2mqtt:latest
+    links: [mqtt]
+    networks: [common]
+    ports: [8099:8099]
+    restart: unless-stopped
+    volumes: [/volume1/docker/mqtt/zigbee2mqtt/data:/app/data, /run/udev:/run/udev:ro]
+
+  node-red:  # https://hub.docker.com/r/nodered/node-red/
+    environment: [TZ=Europe/Amsterdam]
+    image: docker.io/nodered/node-red:latest
+    links: [mqtt]
+    networks: [common]
+    ports: [1880:1880]
+    restart: unless-stopped
+    volumes: [/volume1/docker/mqtt/node-red/data:/data:rw]
+
+networks:
+  common:
+    name: common

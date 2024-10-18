@@ -1,0 +1,11 @@
+---
+services:
+
+  homeassistant:
+    environment:
+      TZ: Europe/Amsterdam
+    image: ghcr.io/home-assistant/home-assistant:stable
+    network_mode: host
+    restart: unless-stopped
+    # privileged: true
+    volumes: [/volume1/docker/homeassistant/hassio/config:/config]

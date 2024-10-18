@@ -1,0 +1,16 @@
+---
+services:
+  docker-registry:  # https://hub.docker.com/_/registry
+    env_file: [./private/docker-registry.env]
+    hostname: docker-registry
+    image: docker.io/library/registry
+    networks: [common]
+    ports: [17401:5000]
+    restart: unless-stopped
+    volumes:
+      - /volume1/docker/registry/docker-registry/etc/docker/registry:/etc/docker/registry:ro
+      - /volume1/docker/registry/docker-registry/var/lib/registry:/var/lib/registry
+
+networks:
+  common:
+    name: common

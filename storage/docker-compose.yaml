@@ -1,0 +1,66 @@
+---
+services:
+
+  postgres:  # https://hub.docker.com/r/timescale/timescaledb-ha
+    env_file: [./private/timescale.env]
+    hostname: postgres
+    image: docker.io/timescale/timescaledb-ha:pg16
+    networks: [common]
+    ports: [54320:5432]
+    restart: unless-stopped
+    volumes:
+      - ./oci/timescale/initdb:/docker-entrypoint-initdb.d:ro
+      - /volume1/docker/storage/postgres/pgdata:/home/postgres/pgdata
+
+  mysql:  # https://hub.docker.com/_/mysql
+    env_file: [./private/mysql.env]
+    hostname: mysql
+    image: docker.io/library/mysql:latest
+    networks: [common]
+    ports: [33060:3306]
+    restart: unless-stopped
+    volumes: [./oci/mysql/initdb:/docker-entrypoint-initdb.d, /volume1/docker/storage/mysql/data:/var/lib/mysql]
+
+  adminer:  # https://hub.docker.com/_/adminer/
+    env_file: [./private/adminer.env]
+    image: docker.io/library/adminer:latest
+    links: [postgres]
+    networks: [common]
+    ports: [8888:8080]
+    restart: unless-stopped
+
+  influxdb2:  # https://hub.docker.com/_/influxdb
+    env_file: [./private/influxdb2.env]
+    hostname: influxdb2
+    image: docker.io/library/influxdb:latest
+    networks: [common]
+    ports: [8086:8086]
+    restart: unless-stopped
+    volumes:
+      - /volume1/docker/storage/influxdb2/config:/etc/influxdb2
+      - /volume1/docker/storage/influxdb2/data:/var/lib/influxdb2
+
+  grafana:  # https://hub.docker.com/r/grafana/grafana
+    env_file: [./private/grafana.env]
+    hostname: grafana
+    image: docker.io/grafana/grafana:latest
+    links: [influxdb2]
+    networks: [common]
+    ports: [3000:3000]
+    restart: unless-stopped
+    volumes: [/volume1/docker/storage/grafana:/var/lib/grafana]
+
+  telegraf:  # https://hub.docker.com/_/telegraf
+    # env_file:
+    #   - ./telegraf.env
+    hostname: telegraf
+    image: docker.io/library/telegraf:latest
+    links: [influxdb2]
+    networks: [common]
+    ports: [8125:8125/udp, 8092:8092/udp, 8094:8094]
+    restart: unless-stopped
+    volumes: [/volume1/docker/storage/telegraf-mqtt/etc/telegraf.conf:/etc/telegraf/telegraf.conf:ro]
+
+networks:
+  common:
+    name: common

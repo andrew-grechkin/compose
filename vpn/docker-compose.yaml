@@ -1,0 +1,49 @@
+---
+# Synology DS Wireguard VPN + Pi-hole
+# wireguard kernel module: https://www.blackvoid.club/wireguard-spk-for-your-synology-nas
+
+services:
+
+  pihole:  # https://github.com/pi-hole/docker-pi-hole
+    environment:
+      - WEBPASSWORD=${PIHOLE_PASSWORD}
+      - TZ=${PIHOLE_TZ}
+      - PIHOLE_UID=${PIHOLE_UID}
+      - PIHOLE_GID=${PIHOLE_GID}
+    hostname: dns.home.ams
+    image: pihole/pihole
+    networks:
+      vpn:
+        ipv4_address: 172.16.16.2
+    ports: [53:53/tcp, 53:53/udp, 5353:80/tcp]
+    restart: unless-stopped
+    volumes:
+      - /volume1/docker/vpn/pihole/etc-pihole:/etc/pihole
+      - /volume1/docker/vpn/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
+
+  wg-easy:  # https://github.com/wg-easy/wg-easy
+    cap_add: [NET_ADMIN, SYS_MODULE]
+    environment:
+      - PASSWORD=${WG_EASY_PASSWORD}
+      - WG_ALLOWED_IPS=172.16.0.0/16,192.168.168.0/24
+      - WG_DEFAULT_ADDRESS=172.16.3.x
+      - WG_DEFAULT_DNS=172.16.16.2
+      - WG_HOST=${WG_EASY_WG_HOST}
+      - WG_PERSISTENT_KEEPALIVE=30
+    hostname: vpn.home.ams
+    image: ghcr.io/wg-easy/wg-easy
+    links: [pihole]
+    networks:
+      vpn:
+        ipv4_address: 172.16.16.3
+    ports: [51820:51820/udp, 51821:51821/tcp]
+    restart: unless-stopped
+    sysctls: [net.ipv4.ip_forward=1, net.ipv4.conf.all.src_valid_mark=1]
+    volumes: [/volume1/docker/vpn/wg-easy:/etc/wireguard]
+
+networks:
+  vpn:
+    name: vpn
+    ipam:
+      config:
+        - subnet: 172.16.16.0/24
